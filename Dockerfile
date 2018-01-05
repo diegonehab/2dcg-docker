@@ -61,6 +61,8 @@ RUN \
     cd .. && \
     rm -rf libpng-1.6.34
 
+RUN ldconfig
+
 RUN \
     chown -R vg:vg /home/vg
 
