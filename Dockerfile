@@ -1,73 +1,79 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 MAINTAINER Diego Nehab <diego.nehab@gmail.com>
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN \
-	echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main" >> /etc/apt/sources.list && \
-	echo "deb-src http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main" >> /etc/apt/sources.list && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BA9EF27F && \
-    apt-get update && \
-    apt-get install -y apt-utils && \
-    apt-get install -y vim wget sudo && \
-    adduser vg --gecos "" --disabled-password && \
-    adduser vg sudo && \
-    echo vg:vg | chpasswd
-
+# Install basic development tools
+# ----------------------------------------------------
 RUN \
     apt-get update && \
-    apt-get install -y gcc-5 g++-5 && \
-    apt-get install -y make && \
-    apt-get install -y pkg-config
+    apt-get install --no-install-recommends -y \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        gnupg2 \
+        libb64-dev \
+        libboost-dev \
+        libboost-dev \
+        libcairo2-dev \
+        libfreetype6-dev \
+        libharfbuzz-dev \
+        libicu-dev \
+        libpng-dev \
+        libreadline-dev \
+        pkg-config \
+        socat \
+        unzip \
+        vim \
+        wget \
+        zlib1g-dev \
+    && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY b64.pc /usr/local/lib/pkgconfig/
+
+# Install Lua 5.3.5 compiled for C++
+# ----------------------------------------------------
+COPY luapp.patch /root
+COPY luapp53.pc /usr/local/lib/pkgconfig/
 
 RUN \
-    apt-get update && \
-    apt-get install -y libboost-dev && \
-    apt-get install -y libb64-dev && \
-    apt-get install -y zlib1g-dev && \
-    apt-get install -y libreadline-dev && \
-    apt-get install -y libfreetype6-dev && \
-    apt-get install -y libicu-dev && \
-    apt-get install -y libharfbuzz-dev && \
-    apt-get install -y libcairo2-dev
-
-ADD b64.pc /usr/lib/x86_64-linux-gnu/pkgconfig
-ADD lua53.pc /usr/lib/x86_64-linux-gnu/pkgconfig
-
-ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig
-
-# build and install latest version of Lua
-RUN \
-    wget https://www.lua.org/ftp/lua-5.3.4.tar.gz && \
-    tar -zxvf lua-5.3.4.tar.gz && \
-    rm -f lua-5.3.4.tar.gz && \
-    cd lua-5.3.4 && \
-    make linux && \
+    NPROC=$(nproc) && \
+    cd /root && \
+    wget https://www.lua.org/ftp/lua-5.3.5.tar.gz && \
+    tar -zxvf lua-5.3.5.tar.gz && \
+    cd /root/lua-5.3.5 && \
+    patch -p1 < ../luapp.patch && \
+    make -j$NPROC linux && \
     make install && \
-    cd .. && \
-    rm -rf lua-5.3.4
+    cd /root && \
+    ln -s /usr/local/bin/luapp5.3 /usr/local/bin/luapp && \
+    \rm -rf /root/lua-5.3.5
 
-# build and install libpng16 separately since it conflicts
-# with libpng12 used by ubuntu
+# Install hack to run as current user
+# ----------------------------------------------------
 RUN \
-    wget ftp://ftp-osl.osuosl.org/pub/libpng/src/libpng16/libpng-1.6.34.tar.gz && \
-    tar -zxvf libpng-1.6.34.tar.gz && \
-    rm -f libpng-1.6.34.tar.gz && \
-    cd libpng-1.6.34 && \
-    ./configure && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf libpng-1.6.34
-
-RUN ldconfig
+	for server in $(shuf -e ha.pool.sks-keyservers.net \
+                            hkp://p80.pool.sks-keyservers.net:80 \
+                            keyserver.ubuntu.com \
+                            hkp://keyserver.ubuntu.com:80 \
+                            pgp.mit.edu) ; do \
+        gpg --keyserver "$server" --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && break || : ; \
+    done
 
 RUN \
-    chown -R vg:vg /home/vg
+    curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture)" && \
+    curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture).asc" && \
+    gpg --verify /usr/local/bin/gosu.asc && \
+    rm /usr/local/bin/gosu.asc && \
+    chmod +x /usr/local/bin/gosu
 
-USER vg
-
-WORKDIR /home/vg
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 CMD ["/bin/bash", "-l"]
+
+WORKDIR ~
