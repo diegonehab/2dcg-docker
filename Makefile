@@ -1,6 +1,6 @@
 .PHONY: build push run share
 
-IMG:=diegonehab/image-base
+IMG:=diegonehab/vg
 
 build:
 	docker build -t $(IMG) .
