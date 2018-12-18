@@ -12,10 +12,11 @@ else
   fi
   if [ ! $(getent passwd $USER) -a ! $(getent passwd $UID) ]; then
     echo Creating user $USER with id $UID
-    useradd -m -u $UID -g $GID $USER
+    useradd -u $UID -g $GID $USER
   else
     echo Group name $USER or id $UID already exist
   fi
   export HOME=/home/$USER
+  mkdir -p $HOME
   exec /usr/local/bin/gosu $USER "$@"
 fi
