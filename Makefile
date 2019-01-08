@@ -12,7 +12,7 @@ pull:
 	docker pull $(IMG)
 
 run:
-	docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e GID=$$(id -g) -it --rm $(IMG)
+	docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e GID=$$(id -g) -it -w /home/$$(id -u -n) --rm $(IMG)
 
 share:
-	docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e GID=$$(id -g) -it --rm -v `pwd`:/home/$$(id -u -n)/host $(IMG)
+	docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e GID=$$(id -g) -it -w /home/$$(id -u -n) --rm -v `pwd`:/home/$$(id -u -n)/host $(IMG)
