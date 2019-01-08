@@ -7,13 +7,8 @@ directory.
 
 Now run the docker container as follows
 
-	docker run -it -v absolute-path:/home/vg/work diegonehab/vg:latest
+    docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e   GID=$$(id -g) -it -w /home/$$(id -u -n) --rm -v `pwd`:/home/$$(id -u -n)/host
 
-
-
-
-You should be dropped into Ubuntu 16.04 with everything installed, and a directory `/home/vg/work` that mirrors the contents of your local `absolute-path` directory.
-
-The user `vg` has password `vg` and has `sudo` priviledges.
+You should be dropped into Ubuntu 18.04 with everything installed, and a directory `/home/<USER>/host` that mirrors the contents of your local `absolute-path` directory.
 
 Have fun.
