@@ -7,7 +7,14 @@ directory.
 
 Now run the docker container as follows
 
-    docker run -e USER=$$(id -u -n) -e GROUP=$$(id -g -n) -e UID=$$(id -u) -e   GID=$$(id -g) -it -w /home/$$(id -u -n) --rm -v `pwd`:/home/$$(id -u -n)/host
+    docker run -it --rm \
+               -e USER=$$(id -u -n) \
+               -e GROUP=$$(id -g -n) \
+               -e UID=$$(id -u) \
+               -e GID=$$(id -g) \
+               -w /home/$$(id -u -n) \
+               -v `pwd`:/home/$$(id -u -n)/host \
+               diegonehab/vg
 
 You should be dropped into Ubuntu 18.04 with everything installed, and a directory `/home/<USER>/host` that mirrors the contents of your local `absolute-path` directory.
 
