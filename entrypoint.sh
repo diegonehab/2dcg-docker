@@ -18,5 +18,6 @@ else
   fi
   export HOME=/home/$USER
   mkdir -p $HOME
+  chown $USER:$GROUP $HOME
   exec /usr/local/bin/gosu $USER "$@"
 fi
