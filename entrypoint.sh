@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [ -z "$GID" -o -z "$UID" -o -z "$USER" -o -z "$GROUP" ]; then
     echo Running as root
     exec "$@"
@@ -14,10 +13,10 @@ else
     echo Creating user $USER with id $UID
     useradd -u $UID -g $GID $USER
   else
-    echo Group name $USER or id $UID already exist
+    echo User name $USER or id $UID already exist
   fi
   export HOME=/home/$USER
   mkdir -p $HOME
   chown $USER:$GROUP $HOME
-  exec /usr/local/bin/gosu $USER "$@"
+  exec /usr/local/bin/su-exec $USER "$@"
 fi

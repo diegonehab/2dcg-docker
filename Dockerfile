@@ -16,15 +16,14 @@ RUN \
         gnupg2 \
         libb64-dev \
         libboost-dev \
-        libboost-dev \
         libcairo2-dev \
         libfreetype6-dev \
         libharfbuzz-dev \
         libicu-dev \
         libpng-dev \
+        liblapacke-dev \
         libreadline-dev \
         pkg-config \
-        socat \
         unzip \
         vim \
         wget \
@@ -52,26 +51,34 @@ RUN \
     ln -s /usr/local/bin/luapp5.3 /usr/local/bin/luapp && \
     \rm -rf /root/lua-5.3.5
 
-# Install hack to run as current user
+# Install MoonJit compiled for C++
 # ----------------------------------------------------
 RUN \
-	for server in $(shuf -e ha.pool.sks-keyservers.net \
-                            hkp://p80.pool.sks-keyservers.net:80 \
-                            keyserver.ubuntu.com \
-                            hkp://keyserver.ubuntu.com:80 \
-                            pgp.mit.edu) ; do \
-        gpg --keyserver "$server" --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && break || : ; \
-    done
+    NPROC=$(nproc) && \
+    cd /root && \
+    wget https://github.com/moonjit/moonjit/archive/2.2.0.tar.gz && \
+    tar -zxvf 2.2.0.tar.gz && \
+    cd moonjit-2.2.0 && \
+    make -j$NPROC && \
+    make install && \
+    cd /root && \
+    \rm -rf moonjit-2.2.0
+
+# Install workaround to run as current user
+# ----------------------------------------------------
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN \
-    curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture)" && \
-    curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture).asc" && \
-    gpg --verify /usr/local/bin/gosu.asc && \
-    rm /usr/local/bin/gosu.asc && \
-    chmod +x /usr/local/bin/gosu
+    chmod +x /usr/local/bin/entrypoint.sh
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN \
+    cd $BUILD_BASE && \
+    git clone --branch v0.2 --depth 1 https://github.com/ncopa/su-exec.git && \
+    cd su-exec && \
+    if [ `git rev-parse --verify HEAD` != 'f85e5bde1afef399021fbc2a99c837cf851ceafa' ]; then exit 1; fi && \
+    make && \
+    cp su-exec /usr/local/bin/
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 CMD ["/bin/bash", "-l"]
