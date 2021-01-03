@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 MAINTAINER Diego Nehab <diego.nehab@gmail.com>
 
@@ -33,7 +33,7 @@ RUN \
 
 COPY b64.pc /usr/local/lib/pkgconfig/
 
-# Install Lua 5.3.5 compiled for C++
+# Install Lua 5.3.6 compiled for C++
 # ----------------------------------------------------
 COPY luapp.patch /root
 COPY luapp53.pc /usr/local/lib/pkgconfig/
@@ -41,15 +41,15 @@ COPY luapp53.pc /usr/local/lib/pkgconfig/
 RUN \
     NPROC=$(nproc) && \
     cd /root && \
-    wget https://www.lua.org/ftp/lua-5.3.5.tar.gz && \
-    tar -zxvf lua-5.3.5.tar.gz && \
-    cd /root/lua-5.3.5 && \
+    wget https://www.lua.org/ftp/lua-5.3.6.tar.gz && \
+    tar -zxvf lua-5.3.6.tar.gz && \
+    cd /root/lua-5.3.6 && \
     patch -p1 < ../luapp.patch && \
-    make -j$NPROC linux && \
+    make -j$NPROC CC=g++ MYCFLAGS="-x c++ -fopenmp" MYLIBS="-lgomp" linux && \
     make install && \
     cd /root && \
     ln -s /usr/local/bin/luapp5.3 /usr/local/bin/luapp && \
-    \rm -rf /root/lua-5.3.5
+    \rm -rf /root/lua-5.3.6
 
 # Install MoonJit compiled for C++
 # ----------------------------------------------------

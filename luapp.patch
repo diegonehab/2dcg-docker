@@ -1,6 +1,6 @@
-diff -Naur lua-5.3.5/Makefile luapp-5.3.5/Makefile
---- lua-5.3.5/Makefile	2016-12-20 14:26:08.000000000 -0200
-+++ luapp-5.3.5/Makefile	2018-11-20 00:14:22.000000000 -0200
+diff -Naur lua-5.3.6/Makefile luapp-5.3.6/Makefile
+--- lua-5.3.6/Makefile	2016-12-20 14:26:08.000000000 -0200
++++ luapp-5.3.6/Makefile	2020-04-23 23:04:13.000000000 -0300
 @@ -12,11 +12,11 @@
  # LUA_ROOT, LUA_LDIR, and LUA_CDIR in luaconf.h.
  INSTALL_TOP= /usr/local
@@ -28,7 +28,7 @@ diff -Naur lua-5.3.5/Makefile luapp-5.3.5/Makefile
 -
  # Lua version and release.
  V= 5.3
- R= $V.4
+ R= $V.6
  
 +# What to install.
 +TO_BIN= luapp$V luacpp$V
@@ -39,22 +39,20 @@ diff -Naur lua-5.3.5/Makefile luapp-5.3.5/Makefile
  # Targets start here.
  all:	$(PLAT)
  
-diff -Naur lua-5.3.5/src/Makefile luapp-5.3.5/src/Makefile
---- lua-5.3.5/src/Makefile	2018-06-25 14:46:36.000000000 -0300
-+++ luapp-5.3.5/src/Makefile	2018-11-20 00:15:34.000000000 -0200
-@@ -6,7 +6,11 @@
+diff -Naur lua-5.3.6/src/Makefile luapp-5.3.6/src/Makefile
+--- lua-5.3.6/src/Makefile	2018-06-25 14:46:36.000000000 -0300
++++ luapp-5.3.6/src/Makefile	2020-04-23 23:00:38.000000000 -0300
+@@ -6,6 +6,10 @@
  # Your platform. See PLATS for possible values.
  PLAT= none
  
--CC= gcc -std=gnu99
 +# Lua version and release.
 +V= 5.3
-+R= $V.4
++R= $V.5
 +
-+CC= g++ -std=c++17 -fopenmp
+ CC= gcc -std=gnu99
  CFLAGS= -O2 -Wall -Wextra -DLUA_COMPAT_5_2 $(SYSCFLAGS) $(MYCFLAGS)
  LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
- LIBS= -lm $(SYSLIBS) $(MYLIBS)
 @@ -28,7 +32,7 @@
  
  PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
@@ -77,34 +75,40 @@ diff -Naur lua-5.3.5/src/Makefile luapp-5.3.5/src/Makefile
  LUAC_O=	luac.o
  
  ALL_O= $(BASE_O) $(LUA_O) $(LUAC_O)
-@@ -107,10 +111,10 @@
- generic: $(ALL)
+diff -Naur lua-5.3.6/src/lua.c luapp-5.3.6/src/lua.c
+--- lua-5.3.6/src/lua.c	2017-04-19 14:29:57.000000000 -0300
++++ luapp-5.3.6/src/lua.c	2019-08-27 14:02:10.000000000 -0300
+@@ -13,6 +13,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <omp.h>
  
- linux:
--	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX" SYSLIBS="-Wl,-E -ldl -lreadline"
-+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX -x c++" SYSLIBS="-Wl,-E -ldl -lgomp -lreadline"
+ #include "lua.h"
  
- macosx:
--	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX" SYSLIBS="-lreadline"
-+	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_MACOSX -x c++" SYSLIBS="-lreadline"
- 
- mingw:
- 	$(MAKE) "LUA_A=lua53.dll" "LUA_T=lua.exe" \
-diff -Naur lua-5.3.5/src/lua.h luapp-5.3.5/src/lua.h
---- lua-5.3.5/src/lua.h	2018-06-13 13:58:17.000000000 -0300
-+++ luapp-5.3.5/src/lua.h	2018-11-19 23:16:10.000000000 -0200
-@@ -21,7 +21,7 @@
+@@ -596,6 +597,7 @@
+ int main (int argc, char **argv) {
+   int status, result;
+   lua_State *L = luaL_newstate();  /* create state */
++  omp_get_thread_num();
+   if (L == NULL) {
+     l_message(argv[0], "cannot create state: not enough memory");
+     return EXIT_FAILURE;
+diff -Naur lua-5.3.6/src/lua.h luapp-5.3.6/src/lua.h
+--- lua-5.3.6/src/lua.h	2018-06-13 13:58:17.000000000 -0300
++++ luapp-5.3.6/src/lua.h	2018-11-19 23:16:10.000000000 -0200
+@@ -20,7 +20,7 @@
  #define LUA_VERSION_NUM		503
- #define LUA_VERSION_RELEASE	"5"
+ #define LUA_VERSION_RELEASE	"6"
  
 -#define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 +#define LUA_VERSION	"Lua for C++ " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
  #define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
- #define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2018 Lua.org, PUC-Rio"
+ #define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2020 Lua.org, PUC-Rio"
  #define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
-diff -Naur lua-5.3.5/src/luaconf.h luapp-5.3.5/src/luaconf.h
---- lua-5.3.5/src/luaconf.h	2017-04-19 14:29:57.000000000 -0300
-+++ luapp-5.3.5/src/luaconf.h	2018-11-20 00:08:40.000000000 -0200
+diff -Naur lua-5.3.6/src/luaconf.h luapp-5.3.6/src/luaconf.h
+--- lua-5.3.6/src/luaconf.h	2017-04-19 14:29:57.000000000 -0300
++++ luapp-5.3.6/src/luaconf.h	2018-11-20 00:08:40.000000000 -0200
 @@ -185,9 +185,9 @@
  ** In Windows, any exclamation mark ('!') in the path is replaced by the
  ** path of the directory of the executable file of the current process.

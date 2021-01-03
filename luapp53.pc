@@ -1,6 +1,6 @@
 prefix=/usr/local
 major_version=5.3
-version=5.3.3
+version=5.3.6
 
 lib_name=luapp${major_version}
 libdir=${prefix}/lib/
@@ -16,7 +16,7 @@ INSTALL_LMOD=${prefix}/share/luapp/${major_version}
 INSTALL_CMOD=${prefix}/lib/luapp/${major_version}
 
 Name: Lua
-Description: Lua language engine
+Description: Lua language engine for C++
 Version: ${version}
 Requires:
 Libs: -L${libdir} -l${lib_name}
