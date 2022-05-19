@@ -21,3 +21,10 @@ run:
 		 -it \
 		 -w /home/$$(id -u -n) \
 		 --rm $(IMG)
+
+run-as-root:
+	docker run \
+		 -v `pwd`:/host \
+		 -it \
+		 -w /host \
+		 --rm $(IMG)
