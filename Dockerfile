@@ -233,7 +233,6 @@ RUN \
     \rm -rf skia && \
     \rm -rf depot_tools
 
-
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -269,11 +268,21 @@ RUN \
 
 COPY --from=builder /usr/local/ /usr/local
 
+# Install Agner Fog's vcl
+# ----------------------------------------------------
+RUN \
+    cd /root && \
+    wget https://github.com/vectorclass/version2/archive/refs/tags/v2.01.04.tar.gz && \
+    tar -zxvf v2.01.04.tar.gz && \
+    mv version2-2.01.04 /usr/local/include/vcl && \
+    \rm -rf v2.01.04.tar.gz
+
 # Install workaround to run as current user
 # ----------------------------------------------------
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN \
+
     chmod +x /usr/local/bin/entrypoint.sh
 
 RUN \
