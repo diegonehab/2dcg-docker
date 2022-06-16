@@ -245,6 +245,7 @@ RUN \
         curl \
         git \
         gnupg2 \
+        gpp \
         libb64-dev \
         libboost-dev \
         libcairo2-dev \
